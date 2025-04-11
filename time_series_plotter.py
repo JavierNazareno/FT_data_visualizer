@@ -63,7 +63,10 @@ class TimeSeriesPlotter:
 
         time_col = "time_seconds" if time_type == 0 else "time_from_zero"
         tini_sec = self._convert_time_to_seconds(tini) if time_type == 0 else tini
-        tfin_sec = self._convert_time_to_seconds(tfin) if time_type == 0 and tfin else self.df[time_col].max()
+        if time_type == 0:
+            tfin_sec = self._convert_time_to_seconds(tfin) if tfin else self.df["time_seconds"].max()
+        else:
+            tfin_sec = tfin if tfin is not None else self.df["time_from_zero"].max()
 
         if tini_sec < self.df[time_col].min() or tfin_sec > self.df[time_col].max():
             print("Error: Specified time range is outside the available data.")
@@ -172,18 +175,3 @@ class TimeSeriesPlotter:
                 **aligned_axes
             )
         return fig
-
-
-'''
-plotter = TimeSeriesPlotter("230505_2_Guy2.csv")
-
-plotter.timeplot("COLLECTVE", time_type=1, tini=0, tfin=10)
-plotter.timeplot("COLLECTVE", time_type=0, tini="001:01:03:42.400", tfin="001:01:03:52.400")
-
-plotter.testplot("COLLECTVE", test=20, time_type=0)
-plotter.testplot("COLLECTVE", test=20, time_type=1)
-
-plotter.timeplot(["COLLECTVE", "gnss_alt_ft", "Yaw_Pedals"], time_type=1, tini=0, tfin=50, grouping=0)
-plotter.testplot(["COLLECTVE", "gnss_alt_ft", "Yaw_Pedals"], test=35, time_type=1, grouping=1)
-
-'''
