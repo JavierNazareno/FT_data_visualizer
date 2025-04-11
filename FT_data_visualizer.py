@@ -28,15 +28,15 @@ if uploaded_file:
     # Step 5: Show inputs based on plot type
     if plot_type == "Timeplot":
         st.markdown("### Timeplot Options")
-        tini = st.text_input("Start time (in seconds)", value="0")
-        tfin = st.text_input("End time (in seconds)", value="")
+        tini_input = st.number_input("Start time (in seconds)", value=0.0, step=1e-6)
+        tfin_input = st.number_input("End time (in seconds)", value=50.0, step=1e-6)
 
         if st.button("📊 Generate Timeplot") and selected_vars:
             fig = plotter.timeplot(
                 variables=selected_vars,
                 time_type=1,  # Always use relative time
-                tini=float(tini),
-                tfin=float(tfin) if tfin else None,
+                tini=tini_input,
+                tfin=tfin_input, #if tfin else None,
                 grouping=grouping
             )
             if fig:
