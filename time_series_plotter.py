@@ -96,6 +96,7 @@ class TimeSeriesPlotter:
             for i, var in enumerate(variables):
                 series = df_plot.dropna(subset=[var])
                 fig.add_trace(go.Scatter(x=series[time_col], y=series[var], mode='lines', name=var), row=i+1, col=1)
+                fig.update_xaxes(title_text="Time (s)" if time_type else "Absolute Time", row=i+1, col=1, showticklabels=True)
                 fig.update_yaxes(title_text=var, row=i+1, col=1)
             fig.update_layout(
                 height=300 * len(variables),
@@ -154,6 +155,7 @@ class TimeSeriesPlotter:
             for i, var in enumerate(variables):
                 series = df_plot.dropna(subset=[var])
                 fig.add_trace(go.Scatter(x=series[time_col], y=series[var], mode='lines', name=var), row=i+1, col=1)
+                fig.update_xaxes(title_text="Time (s)" if time_type else "Absolute Time", row=i+1, col=1, showticklabels=True)
                 fig.update_yaxes(title_text=var, row=i+1, col=1)
             fig.update_layout(
                 height=300 * len(variables),
@@ -175,3 +177,157 @@ class TimeSeriesPlotter:
                 **aligned_axes
             )
         return fig
+
+    def vartimeplot(self, variable_x, variables_y, time_type=0, tini=0, tfin=None, grouping=0):
+        if isinstance(variables_y, str):
+            variables_y = [variables_y]
+
+        time_col = "time_seconds" if time_type == 0 else "time_from_zero"
+        tini_sec = self._convert_time_to_seconds(tini) if time_type == 0 else tini
+        if time_type == 0:
+            tfin_sec = self._convert_time_to_seconds(tfin) if tfin else self.df["time_seconds"].max()
+        else:
+            tfin_sec = tfin if tfin is not None else self.df["time_from_zero"].max()
+
+        if tini_sec < self.df[time_col].min() or tfin_sec > self.df[time_col].max():
+            print("Error: Specified time range is outside the available data.")
+            return None
+
+        df_plot = self.df[(self.df[time_col] >= tini_sec) & (self.df[time_col] <= tfin_sec)]
+
+        if df_plot.empty:
+            print("No data found in the specified time range.")
+            return None
+
+        if len(variables_y) == 1:
+            var = variables_y[0]
+            series = df_plot.dropna(subset=[var, variable_x])
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=series[variable_x], y=series[var], mode='lines', name=var))
+            fig.update_layout(
+                title=f"{var} vs {variable_x}",
+                xaxis_title=variable_x,
+                yaxis_title=var,
+                hovermode="x unified"
+            )
+            return fig
+
+        if grouping == 0:
+            fig = make_subplots(rows=len(variables_y), cols=1, shared_xaxes=False, subplot_titles=variables_y)
+            for i, var in enumerate(variables_y):
+                series = df_plot.dropna(subset=[var, variable_x])
+                fig.add_trace(go.Scatter(x=series[variable_x], y=series[var], mode='lines', name=var), row=i+1, col=1)
+                fig.update_yaxes(title_text=var, row=i+1, col=1)
+                fig.update_xaxes(title_text=variable_x, row=i+1, col=1, showticklabels=True)
+            fig.update_layout(
+                height=300 * len(variables_y),
+                title="Variable vs Variable (Multiple Subplots)",
+                hovermode="x unified"
+            )
+        else:
+            fig = go.Figure()
+            for i, var in enumerate(variables_y):
+                series = df_plot.dropna(subset=[var, variable_x])
+                axis_name = "y" if i == 0 else f"y{i+1}"
+                fig.add_trace(go.Scatter(x=series[variable_x], y=series[var], mode='lines', name=var, yaxis=axis_name))
+            fig.update_layout(
+                title="Variable vs Variable (Grouped)",
+                xaxis_title=variable_x,
+                hovermode="x unified"
+            )
+        return fig
+    
+    def vartestplot(self, variable_x, variables_y, test, active_value=1, grouping=0):
+        if isinstance(variables_y, str):
+            variables_y = [variables_y]
+    
+        if test not in self.df["test_point"].unique():
+            print(f"Error: Test point {test} not found in the dataset.")
+            return
+    
+        df_plot = self.df[
+            (self.df["test_point"] == test) &
+            (self.df["active"] == active_value)
+        ]
+    
+        if df_plot.empty:
+            print(f"No data found for test point {test} with active = {active_value}.")
+            return
+    
+        if len(variables_y) == 1:
+            var_y = variables_y[0]
+            series = df_plot.dropna(subset=[variable_x, var_y])
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=series[variable_x], y=series[var_y], mode='lines', name=var_y))
+            fig.update_layout(
+                title=f"{var_y} vs {variable_x} — Test {test}, Active = {active_value}",
+                xaxis_title=variable_x,
+                yaxis_title=var_y,
+                hovermode="x unified",
+                xaxis=dict(showgrid=True, gridcolor="#444", minor=dict(showgrid=True, gridcolor="#888")),
+                yaxis=dict(showgrid=True, gridcolor="#444", minor=dict(showgrid=True, gridcolor="#888"))
+            )
+            return fig
+    
+        if grouping == 0:
+            fig = make_subplots(rows=len(variables_y), cols=1, shared_xaxes=False, subplot_titles=variables_y)
+            for i, var_y in enumerate(variables_y):
+                series = df_plot.dropna(subset=[variable_x, var_y])
+                fig.add_trace(
+                    go.Scatter(x=series[variable_x], y=series[var_y], mode='lines', name=var_y),
+                    row=i+1, col=1
+                )
+                fig.update_yaxes(title_text=var_y, row=i+1, col=1, showgrid=True, gridcolor="#444", minor=dict(showgrid=True, gridcolor="#888"))
+                fig.update_xaxes(title_text=variable_x, row=i+1, col=1, showgrid=True, gridcolor="#444", minor=dict(showgrid=True, gridcolor="#888"))
+            fig.update_layout(
+                height=300 * len(variables_y),
+                title=f"VarTestplot — Test {test}, Active = {active_value}",
+                hovermode="x unified"
+            )
+            return fig
+    
+        else:
+            fig = go.Figure()
+            for i, var_y in enumerate(variables_y):
+                series = df_plot.dropna(subset=[variable_x, var_y])
+                axis_name = "y" if i == 0 else f"y{i+1}"
+                fig.add_trace(
+                    go.Scatter(x=series[variable_x], y=series[var_y], mode='lines', name=var_y, yaxis=axis_name)
+                )
+    
+            layout_yaxes = {
+                "yaxis": dict(title=variables_y[0], side="left", showgrid=True, gridcolor="#444", minor=dict(showgrid=True, gridcolor="#888"))
+            }
+    
+            for i, var in enumerate(variables_y[1:], start=1):
+                layout_yaxes[f"yaxis{i+1}"] = dict(
+                    title=var,
+                    overlaying="y",
+                    side="left",
+                    position=0.05 * i,
+                    showgrid=False,
+                    minor=dict(showgrid=True, gridcolor="#888")
+                )
+    
+            fig.update_layout(
+                title=f"VarTestplot (Grouped) — Test {test}, Active = {active_value}",
+                xaxis_title=variable_x,
+                hovermode="x unified",
+                **layout_yaxes
+            )
+            return fig
+
+
+'''
+plotter = TimeSeriesPlotter("230505_2_Guy2.csv")
+
+plotter.timeplot("COLLECTVE", time_type=1, tini=0, tfin=10)
+plotter.timeplot("COLLECTVE", time_type=0, tini="001:01:03:42.400", tfin="001:01:03:52.400")
+
+plotter.testplot("COLLECTVE", test=20, time_type=0)
+plotter.testplot("COLLECTVE", test=20, time_type=1)
+
+
+plotter.timeplot(["COLLECTVE", "gnss_alt_ft", "Yaw_Pedals"], time_type=1, tini=0, tfin=50, grouping=0)
+plotter.testplot(["COLLECTVE", "gnss_alt_ft", "Yaw_Pedals"], test=35, time_type=1, grouping=1)
+'''
