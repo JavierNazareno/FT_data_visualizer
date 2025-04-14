@@ -1,2 +1,4 @@
 pandas
 plotly
+plotly>=5.18
+kaleido  # required for PNG export via fig.write_image()
