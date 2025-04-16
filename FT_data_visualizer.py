@@ -10,6 +10,8 @@ from plotly.subplots import make_subplots
 from time_series_plotter import TimeSeriesPlotter
 import plotly.io as pio
 import io
+from streamlit_plotly_events import plotly_events
+import numpy as np
 
 st.set_page_config(layout="wide")
 st.title("📈 Flight Test Data Visualizer")
@@ -19,7 +21,7 @@ uploaded_file = st.file_uploader(
     "Upload your CSV file", type="csv",
     help="Upload a CSV file containing flight test time series data."
 )
-
+delimiter = st.radio("Select CSV delimiter", [",", ";"], index=0, horizontal=True)
 # Default Plotly colors
 DEFAULT_COLORS = [
     "#1f77b4", "#ff7f0e", "#2ca02c", "#d62728",
@@ -132,7 +134,7 @@ def create_plotly_figure(data, grouping, x_title, y_titles, style_map):
 
 # Main plotting logic
 if uploaded_file:
-    plotter = TimeSeriesPlotter(uploaded_file)
+    plotter = TimeSeriesPlotter(uploaded_file, delimiter=delimiter)
     all_vars = [col for col in plotter.df.columns if col not in ["Time", "time_seconds", "time_from_zero"]]
     plot_type = st.selectbox("Choose plot type", ["Timeplot", "Testplot", "VarTimeplot", "VarTestplot"])
 
@@ -323,4 +325,3 @@ if uploaded_file:
                     elif export_format == "HTML":
                         html = pio.to_html(fig, full_html=False)
                         st.download_button("Download HTML", html, file_name="plot.html", mime="text/html")
-
