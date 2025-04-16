@@ -1,4 +1,6 @@
-pandas
-plotly
-plotly>=5.18
-kaleido  # required for PNG export via fig.write_image()
+pandas>=1.4.0
+numpy>=1.22.0
+scipy>=1.8.0
+plotly>=5.10.0
+streamlit_plotly_events>=0.0.6
+kaleido>=0.2.1
