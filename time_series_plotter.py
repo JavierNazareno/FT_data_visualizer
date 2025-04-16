@@ -7,10 +7,12 @@ Created on Thu Apr 10 16:57:58 2025
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import csv
 
 class TimeSeriesPlotter:
-    def __init__(self, csv_path):
-        self.df = pd.read_csv(csv_path)
+    def __init__(self, csv_path, delimiter=","):
+        #delimiter = self.detect_delimiter(csv_path)
+        self.df = pd.read_csv(csv_path, delimiter=delimiter)
         self.df = self._add_time_from_zero(self.df)
 
     def _convert_time_to_seconds(self, time_str):
@@ -20,12 +22,23 @@ class TimeSeriesPlotter:
         except:
             return None
 
+    def detect_delimiter(self,uploaded_file):
+        """
+        Detects the delimiter of a CSV file from a Streamlit UploadedFile object.
+        """
+        uploaded_file.seek(0)  # Reset file pointer to beginning
+        sample = uploaded_file.read(2048).decode('utf-8')  # Read and decode
+        uploaded_file.seek(0)  # Reset again for actual reading later
+        sniffer = csv.Sniffer()
+        dialect = sniffer.sniff(sample)
+        return dialect.delimiter 
+        
     def _seconds_to_time_str(self, total_seconds):
-        days = int(total_seconds // 86400)
-        hours = int((total_seconds % 86400) // 3600)
-        minutes = int((total_seconds % 3600) // 60)
-        seconds = total_seconds % 60
-        return f"{days:03}:{hours:02}:{minutes:02}:{seconds:06.3f}"
+            days = int(total_seconds // 86400)
+            hours = int((total_seconds % 86400) // 3600)
+            minutes = int((total_seconds % 3600) // 60)
+            seconds = total_seconds % 60
+            return f"{days:03}:{hours:02}:{minutes:02}:{seconds:06.3f}"
 
     def _add_time_from_zero(self, df):
         df["time_seconds"] = df["Time"].apply(self._convert_time_to_seconds)
