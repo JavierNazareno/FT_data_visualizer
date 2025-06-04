@@ -13,7 +13,10 @@ class TimeSeriesPlotter:
     def __init__(self, csv_path, delimiter=","):
         #delimiter = self.detect_delimiter(csv_path)
         self.df = pd.read_csv(csv_path, delimiter=delimiter)
-        self.df = self._add_time_from_zero(self.df)
+        if "time_from_zero" in self.df and "time_seconds" in self.df:
+            pass
+        else:
+            self.df = self._add_time_from_zero(self.df)
 
     def _convert_time_to_seconds(self, time_str):
         try:
@@ -148,3 +151,4 @@ class TimeSeriesPlotter:
             for var in variables_y if var in df_plot.columns
         ]
     
+
