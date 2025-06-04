@@ -214,7 +214,7 @@ if uploaded_file:
         variables = st.multiselect("Select variable(s) to plot", all_vars)
         test_points = sorted(plotter.df["test_point"].dropna().unique().astype(int))
         test = st.selectbox("Select Test Point", options=test_points)
-        active_value = st.radio("Active State", [0, 1], horizontal=True)
+        active_value = st.radio("Active State", [1, 0], horizontal=True)
         grouping = 1 if st.checkbox("Group parameters in same plot") else 0
 
         if variables:
