@@ -154,7 +154,7 @@ def create_plotly_figure(data, grouping, x_title, y_titles, style_map):
 if uploaded_file:
     plotter = TimeSeriesPlotter(uploaded_file, delimiter=delimiter)
     all_vars = [col for col in plotter.df.columns if col not in ["Time", "time_seconds", "time_from_zero"]]
-    plot_type = st.selectbox("Choose plot type", ["Timeplot", "Testplot", "VarTimeplot", "VarTestplot"])
+    plot_type = st.selectbox("Choose plot type", ["Testplot", "Timeplot", "VarTimeplot", "VarTestplot"])
 
     if plot_type == "Timeplot":
         variables = st.multiselect("Select variable(s) to plot", all_vars)
