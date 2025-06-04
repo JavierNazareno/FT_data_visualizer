@@ -151,4 +151,3 @@ class TimeSeriesPlotter:
             for var in variables_y if var in df_plot.columns
         ]
     
-
