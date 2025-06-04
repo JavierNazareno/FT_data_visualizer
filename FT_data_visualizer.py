@@ -12,6 +12,16 @@ import plotly.io as pio
 import io
 from streamlit_plotly_events import plotly_events
 import numpy as np
+import pandas as pd
+
+def generate_csv_export(data, x_label="Time"):
+    export_data = {"x": data[0]["x"]}
+    for trace in data:
+        export_data[trace["name"]] = trace["y"]
+    df_export = pd.DataFrame(export_data)
+    df_export.rename(columns={"x": x_label}, inplace=True)
+    df_export["time_from_zero"] = df_export[x_label] - df_export[x_label].iloc[0]
+    return df_export.to_csv(index=False, sep=";").encode("utf-8")
 
 st.set_page_config(layout="wide")
 st.title("📈 Flight Test Data Visualizer")
@@ -183,6 +193,13 @@ if uploaded_file:
                     elif export_format == "HTML":
                         html = pio.to_html(fig, full_html=False)
                         st.download_button("Download HTML", html, file_name="plot.html", mime="text/html")
+            csv = generate_csv_export(data, x_label="time_seconds")
+            st.download_button(
+                label="📤 Export data as CSV",
+                data=csv,
+                file_name="plot_data.csv",
+                mime="text/csv"
+            )
 
 
     elif plot_type == "Testplot":
@@ -230,6 +247,15 @@ if uploaded_file:
                     elif export_format == "HTML":
                         html = pio.to_html(fig, full_html=False)
                         st.download_button("Download HTML", html, file_name="plot.html", mime="text/html")
+                        
+            csv = generate_csv_export(data, x_label="time_seconds")
+            
+            st.download_button(
+                label="📤 Export data as CSV",
+                data=csv,
+                file_name="plot_data.csv",
+                mime="text/csv"
+            )
 
 
     elif plot_type == "VarTimeplot":
@@ -277,6 +303,14 @@ if uploaded_file:
                     elif export_format == "HTML":
                         html = pio.to_html(fig, full_html=False)
                         st.download_button("Download HTML", html, file_name="plot.html", mime="text/html")
+                        
+            csv = generate_csv_export(data, x_label=variable_x)
+            st.download_button(
+                label="📤 Export data as CSV",
+                data=csv,
+                file_name="plot_data.csv",
+                mime="text/csv"
+            )
 
 
     elif plot_type == "VarTestplot":
@@ -325,3 +359,12 @@ if uploaded_file:
                     elif export_format == "HTML":
                         html = pio.to_html(fig, full_html=False)
                         st.download_button("Download HTML", html, file_name="plot.html", mime="text/html")
+                        
+            csv = generate_csv_export(data, x_label=variable_x)
+            st.download_button(
+                label="📤 Export data as CSV",
+                data=csv,
+                file_name="plot_data.csv",
+                mime="text/csv"
+            )
+
