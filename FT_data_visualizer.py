@@ -15,11 +15,19 @@ import numpy as np
 import pandas as pd
 
 def generate_csv_export(data, x_label="Time"):
+    # If there's no data or the first x‐array is empty, return an empty CSV
+    if not data or len(data[0].get("x", [])) == 0:
+        # You could also return None or b""; this will produce an empty download button
+        return pd.DataFrame().to_csv(index=False, sep=";").encode("utf-8")
+
     export_data = {"x": data[0]["x"]}
     for trace in data:
         export_data[trace["name"]] = trace["y"]
+
     df_export = pd.DataFrame(export_data)
     df_export.rename(columns={"x": x_label}, inplace=True)
+
+    # Now that x_label column is guaranteed non‐empty, this is safe:
     df_export["time_from_zero"] = df_export[x_label] - df_export[x_label].iloc[0]
     return df_export.to_csv(index=False, sep=";").encode("utf-8")
 
